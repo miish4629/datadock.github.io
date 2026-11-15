@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataDock: Reports that build themselves</title>
+<meta name="description" content="DataDock is a data analytics and automation service for growing businesses: Excel automation, Power BI dashboards, SQL reporting and Python workflows.">
+<style>
+:root{--navy:#0b2243;--navy2:#13335f;--blue:#2563eb;--sky:#dbe8ff;--paper:#f5f8fc;--ink:#14243b;--muted:#51627a;--line:#d6e0ee;--white:#fff;--amber:#ffb84d;
+--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:17px/1.65 var(--sans);color:var(--ink);background:var(--white)}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+h1,h2,h3{line-height:1.12;margin:0;letter-spacing:-.02em}
+h2{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:800;margin-bottom:12px}
+h3{font-size:1.2rem;font-weight:700;margin-bottom:8px}
+p{margin:0 0 12px}
+.lead{color:var(--muted);max-width:40em}
+.btn{display:inline-block;background:var(--amber);color:#2b1c00;text-decoration:none;padding:13px 24px;border-radius:8px;border:0;font:700 1rem var(--sans);cursor:pointer}
+.btn:hover{filter:brightness(1.05)}
+.btn.alt{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.55)}
+
+.top{background:var(--navy);color:#fff}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font-weight:800;font-size:1.3rem;color:#fff;text-decoration:none;letter-spacing:-.02em}
+.logo span{color:var(--amber)}
+.bar nav a{color:#c9d8ef;text-decoration:none;margin-left:22px;font-size:.95rem}
+.bar nav a:hover{color:#fff}
+.hero{padding:70px 0 84px}
+.hero h1{font-size:clamp(2.5rem,7.5vw,4.6rem);font-weight:800;max-width:11em}
+.hero p{color:#c9d8ef;font-size:1.15rem;max-width:34em;margin:20px 0 30px}
+.hero .row{display:flex;gap:12px;flex-wrap:wrap}
+section{padding:70px 0}
+.tint{background:var(--paper)}
+
+/* About: clean paragraph with soft highlights and a small popover */
+.about-box{position:relative;max-width:44em}
+.about-text{font-size:1.25rem;line-height:1.85;margin:0 0 10px}
+.term{font:inherit;color:inherit;background:linear-gradient(transparent 62%,#cfe0ff 62%);border:0;padding:0;margin:0;cursor:pointer;border-radius:2px}
+.term:hover,.term[aria-expanded="true"]{background:linear-gradient(transparent 0,#cfe0ff 0);color:var(--navy)}
+.hint{color:var(--muted);font-size:.95rem;margin:0}
+.pop{position:absolute;z-index:5;width:min(330px,100%);background:var(--navy);color:#fff;border-radius:10px;padding:14px 16px;font-size:.97rem;line-height:1.5;box-shadow:0 12px 30px rgba(11,34,67,.25)}
+.pop[hidden]{display:none}
+.pop strong{display:block;margin-bottom:3px;color:var(--amber)}
+
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:26px}
+.card{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:24px}
+.card .tag,.case .tag{display:inline-block;background:var(--sky);color:var(--navy2);font-weight:700;font-size:.85rem;padding:3px 10px;border-radius:999px;margin-bottom:12px}
+.card p{color:var(--muted);margin:0}
+.svc h3{color:var(--navy)}
+.who{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-top:26px}
+.who .card{border-top:5px solid var(--blue)}
+
+/* Sample work */
+.work{display:grid;gap:26px;margin-top:28px}
+.case{display:grid;grid-template-columns:1fr;background:var(--white);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+@media(min-width:860px){.case{grid-template-columns:1.15fr 1fr}.case.flip .vis{order:2}}
+.case .body{padding:28px;align-self:center}
+.vis{background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);padding:26px;display:flex;align-items:center;justify-content:center}
+.frame{width:100%;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 18px 40px rgba(5,15,35,.45)}
+.frame .chrome{display:flex;gap:6px;padding:9px 12px;background:#eaf0f8}
+.frame .chrome i{width:9px;height:9px;border-radius:50%;background:#b8c6dc;display:block}
+.frame img{display:block;width:100%;height:auto}
+.vis.text{flex-direction:column;align-items:flex-start;gap:10px;color:#e8f0ff}
+.vis.text div{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:11px 14px;border-radius:8px;width:100%;font-size:.97rem}
+.steps{list-style:none;padding:0;margin:14px 0 0}
+.steps li{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:.97rem}
+.steps li b{color:var(--navy)}
+.steps li span{color:var(--muted)}
+
+.contact{background:var(--navy);color:#fff}
+.contact h2{color:#fff}
+.contact .lead{color:#c9d8ef}
+.contact .row{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px;align-items:center}
+#copied{color:var(--amber);font-size:.95rem}
+footer{background:#071730;color:#9fb3d1;padding:22px 0;font-size:.9rem}
+@media(max-width:600px){.bar nav{display:none}.steps li{grid-template-columns:1fr}.vis{padding:16px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Case studies */
+.cs{background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.cs-head{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-end;padding:24px 28px;border-bottom:1px solid var(--line)}
+.cs-label{display:inline-block;background:var(--sky);color:var(--navy2);font-weight:700;font-size:.85rem;padding:3px 10px;border-radius:999px;margin-bottom:10px}
+.cs-head h3{font-size:1.6rem;margin:0}
+.cs-grid{display:grid;grid-template-columns:1fr}
+@media(min-width:860px){.cs-grid{grid-template-columns:1.2fr 1fr}.cs.flip .vis{order:2}}
+.cs-body{padding:26px 28px}
+.cs-body h4{margin:0 0 4px;font-size:.95rem;color:var(--blue)}
+.cs-body p{color:var(--muted);margin:0 0 16px}
+.feats{margin:4px 0 0;padding-left:20px;color:var(--ink);font-size:.97rem}
+.feats li{margin-bottom:4px}
+@media(max-width:600px){.cs-head,.cs-body{padding:20px}}
+
+.sub-h{font-size:1.3rem;margin:34px 0 4px;color:var(--navy)}
+.cs-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.cs-cols .cs-body{border-top:1px solid var(--line)}
+@media(min-width:860px){.cs-cols .cs-body+.cs-body{border-left:1px solid var(--line)}}
+.cs.compact .cs-head{border-bottom:0;padding-bottom:6px}
+.cs.compact .cs-head h3{font-size:1.3rem}
+.cs.compact .cs-body p{margin:0}
+
+.trust{background:var(--paper);border-bottom:1px solid var(--line)}
+.trust .wrap{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));padding-top:26px;padding-bottom:26px}
+.trust b{display:block;font-size:1.25rem;color:var(--navy)}
+.trust span{color:var(--muted);font-size:.95rem}
+.email{margin:22px 0 0;font-size:clamp(1.3rem,4vw,1.9rem);font-weight:700;color:var(--amber);user-select:all;-webkit-user-select:all;cursor:text;word-break:break-all}
+
+/* Dashboard */
+.dash{background:#eaf0f9;padding:18px;border-top:1px solid var(--line)}
+.d-top{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;background:var(--navy);color:#fff;border-radius:10px;padding:12px 16px;margin-bottom:14px}
+.d-top b{font-size:1.05rem;margin-right:10px}
+.d-top small{color:#9fb3d1}
+.d-filter{display:flex;flex-wrap:wrap;gap:6px}
+.d-filter button{border:1px solid rgba(255,255,255,.3);background:transparent;color:#dbe8ff;border-radius:999px;padding:4px 12px;font:600 .85rem var(--sans);cursor:pointer}
+.d-filter button[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#2b1c00}
+.d-kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:14px}
+.d-kpi{background:#fff;border-radius:10px;padding:14px 16px;border-left:5px solid var(--blue)}
+.d-kpi span{display:block;color:var(--muted);font-size:.85rem}
+.d-kpi b{font-size:1.6rem;color:var(--navy);line-height:1.2}
+.d-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.d-card{background:#fff;border-radius:10px;padding:16px}
+.d-card h5{margin:0 0 10px;font-size:.98rem;color:var(--navy)}
+@media(min-width:900px){.d-card.span2{grid-column:span 2}}
+#d-months{width:100%;height:auto;display:block}
+#d-months rect.bar{fill:#2563eb;cursor:pointer;transition:fill .15s}
+#d-months rect.bar.max{fill:#0b2243}
+#d-months rect.bar:hover,#d-months rect.bar:focus,#d-months rect.bar.on{fill:#ffb84d;outline:none}
+#d-months text{font:11px var(--sans);fill:#51627a}
+.d-read{margin:8px 0 0;color:var(--muted);font-size:.9rem}
+.d-donut{position:relative;max-width:190px;margin:0 auto}
+.d-donut svg{width:100%;display:block;transform:rotate(-90deg)}
+.d-donut circle{fill:none;stroke-width:6;transition:opacity .15s}
+.d-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.15}
+.d-center b{font-size:1.5rem;color:var(--navy)}
+.d-center span{font-size:.75rem;color:var(--muted)}
+.d-legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:10px;font-size:.85rem;color:var(--muted)}
+.d-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.hb{display:grid;grid-template-columns:128px 1fr 40px;gap:8px;align-items:center;font-size:.85rem;margin-bottom:7px;color:var(--ink)}
+.hb .t{height:9px;background:#e6edf8;border-radius:999px;overflow:hidden}
+.hb .t i{display:block;height:100%;background:var(--blue);border-radius:999px}
+.hb em{font-style:normal;color:var(--muted);text-align:right}
+@media(max-width:520px){.hb{grid-template-columns:96px 1fr 34px}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap">
+    <div class="bar">
+      <a class="logo" href="#top">Data<span>Dock</span></a>
+      <nav aria-label="Main"><a href="#about">About</a><a href="#services">Services</a><a href="#work">Case studies</a><a href="#contact">Contact</a></nav>
+    </div>
+    <div class="hero" id="top">
+      <h1>Reports that build themselves.</h1>
+      <p>DataDock builds dashboards and automated reports for businesses, so your team spends time on decisions, not spreadsheets.</p>
+      <div class="row"><a class="btn" href="#contact">Talk to DataDock</a><a class="btn alt" href="#work">See case studies</a></div>
+    </div>
+  </div>
+</div>
+
+<div class="trust">
+  <div class="wrap">
+    <div><b>2.5+ years</b><span>of hands-on experience in analytics and automation</span></div>
+    <div><b>On time</b><span>projects delivered to the agreed schedule</span></div>
+    <div><b>Accurate</b><span>every report is checked before it reaches you</span></div>
+  </div>
+</div>
+
+<section id="about">
+  <div class="wrap">
+    <h2>About DataDock</h2>
+    <div class="about-box" id="aboutbox">
+      <p class="about-text">
+        DataDock is a data analytics and automation service for growing businesses. We specialize in
+        <button class="term" type="button" data-k="excel" aria-expanded="false">Excel automation</button>,
+        <button class="term" type="button" data-k="bi" aria-expanded="false">Power BI dashboards</button>,
+        <button class="term" type="button" data-k="sql" aria-expanded="false">SQL reporting</button>, and
+        <button class="term" type="button" data-k="py" aria-expanded="false">Python workflows</button>
+        that <button class="term" type="button" data-k="effort" aria-expanded="false">cut manual effort</button>,
+        <button class="term" type="button" data-k="errors" aria-expanded="false">reduce errors</button>, and give leadership a clear view of the
+        <button class="term" type="button" data-k="kpi" aria-expanded="false">KPIs that matter</button>.
+        Our approach is simple:
+        <button class="term" type="button" data-k="understand" aria-expanded="false">understand your reporting process</button>,
+        <button class="term" type="button" data-k="automate" aria-expanded="false">automate the repetitive parts</button>, and
+        <button class="term" type="button" data-k="deliver" aria-expanded="false">deliver dashboards your team can actually use</button>.
+      </p>
+      <p class="hint">Tap a highlighted phrase to learn more.</p>
+      <div class="pop" id="pop" role="status" hidden></div>
+    </div>
+  </div>
+</section>
+
+<section id="services" class="tint">
+  <div class="wrap">
+    <h2>What we build</h2>
+    <p class="lead">Three services, each designed to save your team time and give you numbers you can trust.</p>
+    <div class="grid">
+      <div class="card svc"><span class="tag">Dashboards</span><h3>Power BI and Excel dashboards</h3><p>Clear, interactive views of your sales, costs and KPIs, all in one place.</p></div>
+      <div class="card svc"><span class="tag">Automation</span><h3>Report automation with Python and SQL</h3><p>Daily, weekly and monthly reports that collect, calculate and update on their own.</p></div>
+      <div class="card svc"><span class="tag">Analysis</span><h3>Data cleaning and analysis</h3><p>Messy files turned into tidy data and clear answers you can act on.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="work" class="tint">
+  <div class="wrap">
+    <h2>Case studies</h2>
+    <p class="lead">Examples of how DataDock turns raw data into dashboards and automated reports.</p>
+    <h3 class="sub-h">Dashboards</h3>
+    <div class="work">
+      <article class="cs">
+        <header class="cs-head"><div><span class="cs-label">Dashboard</span><h3>Employee leave tracking</h3></div></header>
+        <div class="dash">
+          <div class="d-top">
+            <div><b>Employee leave overview</b><small>Sample data</small></div>
+            <div class="d-filter" role="group" aria-label="Highlight a department" id="d-filter"></div>
+          </div>
+          <div class="d-kpis" id="d-kpis"></div>
+          <div class="d-grid">
+            <div class="d-card span2"><h5>Leave by month</h5><svg id="d-months" viewBox="0 0 620 230" role="group" aria-label="Leave by month bar chart"></svg><p class="d-read" id="d-read" aria-live="polite">Hover or tap a bar to see its value.</p></div>
+            <div class="d-card"><h5>Leave by department</h5><div class="d-donut"><svg id="d-donut" viewBox="0 0 42 42" role="img" aria-label="Leave by department donut chart"></svg><div class="d-center" id="d-center"></div></div><div class="d-legend" id="d-legend"></div></div>
+            <div class="d-card"><h5>Leave type</h5><div id="d-types"></div></div>
+            <div class="d-card"><h5>Leave by position</h5><div id="d-pos"></div></div>
+            <div class="d-card"><h5>Top 10 employees</h5><div id="d-emp"></div></div>
+          </div>
+        </div>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Leave data sits in long tables, so patterns by team or month are hard to see.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>The data was summarised into pivot tables and linked to charts, with filter buttons for position, month and department.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>One interactive dashboard where every chart updates with a click: leave by department, month, type and position, plus the top 10 employees.</p></div>
+        </div>
+      </article>
+    </div>
+    <h3 class="sub-h">Automation projects</h3>
+    <div class="work">
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Monthly account book builder</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Building a monthly master list needs payment history pulled from six separate monthly files.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Merges six months of payment files, totals payments per account, counts the months each account paid, groups accounts into payment-frequency buckets and adds balances and data-quality flags.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>One clean monthly master file, ready for the next stage.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Eligible account filtering</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Before work is assigned, accounts must be filtered by clear, consistent rules.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Removes flagged accounts, keeps only valid records above a minimum balance, excludes accounts on a special list and tags who handled each account last month.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>A lean file with only the required columns, ready for assignment.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Team allocation mapping</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Lists from many teams must be combined into one view of who owns each account.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Matches every team's list to the master book, builds a single owner column and cleans up overlapping labels.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>A master book showing the final owner of every account.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Payment behaviour analysis</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Leadership wants to see how payment behaviour differs by team and by delay stage.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Adds the month's payments and contact status to the book, groups accounts by payment frequency and compares totals and counts for contacted and non-contacted accounts.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>A summary table by team and delay stage, ready for review.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Historical trend report</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Seeing month-over-month movement means combining many monthly files by hand.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Loads several months of payment files, removes payment types that should not count, totals payments per account and groups them by team.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>An Excel trend report with monthly totals for each team.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Customer pipeline report</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Tracking prospects through each stage, and checking who is already onboarded, is slow across many files.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Combines credit bureau and disbursement files, finds customers not yet onboarded, flags positive credit status and shows how far each one has moved through the pipeline stages.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>A three-sheet Excel workbook for the pipeline team.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Daily partner reports</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Daily files from several partner teams must be combined, refreshed and sent back separately.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Loads each team's file, standardises the columns, refreshes balances from the latest report, adjusts for recoveries and splits the result by team.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>Ready-to-share daily files, one per team.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Daily business snapshot</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Leadership needs the same set of business numbers every morning.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Compares today with yesterday and last month to find additions, reductions and net change, totals payments by team group and adds new disbursement figures.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>The day's key numbers, calculated the same way every time.</p></div>
+        </div>
+      </article>
+      <article class="cs compact">
+        <header class="cs-head"><div><span class="cs-label">Automation project</span><h3>Branch-wise summary</h3></div></header>
+        <div class="cs-cols">
+          <div class="cs-body"><h4>The challenge</h4><p>Comparing opening and closing positions by branch takes hours when done manually.</p></div>
+          <div class="cs-body"><h4>The approach</h4><p>Loads the opening and closing portfolios, assigns delay stages, brings in demand, collection and headcount files and groups everything by branch.</p></div>
+          <div class="cs-body"><h4>The output</h4><p>A branch-level summary ready for review.</p></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="contact">
+  <div class="wrap">
+    <h2>Tell us which report takes the most time</h2>
+    <p class="lead">Send a short note about the reports or spreadsheets your team rebuilds every week. We will reply with how we would automate them.</p>
+    <p class="email">datadock.hub@gmail.com</p>
+  </div>
+</section>
+
+<footer><div class="wrap">&copy; <span id="yr">2026</span> DataDock. Reports that build themselves.</div></footer>
+
+<script>
+(function(){
+  var EMAIL="datadock.hub@gmail.com";
+  document.getElementById("yr").textContent=new Date().getFullYear();
+
+  var info={
+    excel:["Excel automation","Macros, Power Query and formula setups replace repeated copy-paste work. Your weekly file refreshes in one click."],
+    bi:["Power BI dashboards","One screen shows sales, costs or performance by team, product or month, and you can filter it yourself."],
+    sql:["SQL reporting","Queries pull the right numbers straight from your database with the same logic every time, so totals always match."],
+    py:["Python workflows","Scripts collect files, clean data, calculate results and send the output on a schedule."],
+    effort:["Cut manual effort","Downloading, merging and formatting run on their own, giving your team their hours back."],
+    errors:["Reduce errors","Checks are built into the process, so broken formulas and copy-paste slips are caught early."],
+    kpi:["KPIs that matter","We agree with you on the few numbers that drive decisions, then make them easy to see."],
+    understand:["1. Understand","We learn how your reports are made today: where the data lives and which numbers leadership needs."],
+    automate:["2. Automate","We automate the repetitive steps with Excel, SQL and Python, with checks along the way."],
+    deliver:["3. Deliver","You get dashboards your team can read at a glance, plus a short walkthrough so anyone can use them."]
+  };
+  var box=document.getElementById("aboutbox"),pop=document.getElementById("pop");
+  var terms=[].slice.call(document.querySelectorAll(".term")),open=null;
+  function closePop(){pop.hidden=true;if(open){open.setAttribute("aria-expanded","false");open=null}}
+  function openPop(b){
+    var d=info[b.getAttribute("data-k")];
+    pop.innerHTML="";
+    var s=document.createElement("strong");s.textContent=d[0];
+    var p=document.createElement("span");p.textContent=d[1];
+    pop.appendChild(s);pop.appendChild(p);pop.hidden=false;
+    var bb=b.getBoundingClientRect(),cb=box.getBoundingClientRect();
+    var left=Math.max(0,Math.min(bb.left-cb.left,cb.width-pop.offsetWidth));
+    pop.style.left=left+"px";
+    pop.style.top=(bb.bottom-cb.top+8)+"px";
+    terms.forEach(function(t){t.setAttribute("aria-expanded",t===b)});
+    open=b;
+  }
+  terms.forEach(function(b){
+    b.onclick=function(e){e.stopPropagation();open===b?closePop():openPop(b)};
+  });
+  document.addEventListener("click",function(e){if(!pop.contains(e.target))closePop()});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")closePop()});
+  window.addEventListener("resize",closePop);
+})();
+</script>
+<script>
+(function(){
+  var DEPT=[["Finance",23,"#0b2243"],["HR",19,"#2563eb"],["IT",18,"#ffb84d"],["Marketing",17,"#7fb0ff"],["Operations",23,"#19a7a0"]];
+  var MONTHS=[["Jan",555],["Feb",580],["Mar",655],["Apr",680],["May",582],["Jun",645],["Jul",555],["Aug",685],["Sep",678],["Oct",620],["Nov",548],["Dec",652]];
+  var TYPES=[["Casual leave",582],["Earned leave",578],["Paternity leave",575],["Sick leave",560],["Maternity leave",551]];
+  var POS=[["Financial Analyst",375],["Logistics Coordinator",345],["Operations Manager",320],["Recruiter",285],["Accountant",270],["HR Manager",262],["Software Engineer",262],["Marketing Specialist",250],["System Administrator",235],["SEO Analyst",225]];
+  var EMP=[27,25,25,25,24,24,24,22,22,22].map(function(v,i){return["Employee "+(i+1),v]});
+  var NS="http://www.w3.org/2000/svg",sel=null;
+  function el(n,a,p){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+  function fmt(n){return n.toLocaleString("en-IN")}
+  var total=MONTHS.reduce(function(s,m){return s+m[1]},0);
+  var hi=MONTHS.reduce(function(a,b){return b[1]>a[1]?b:a}),lo=MONTHS.reduce(function(a,b){return b[1]<a[1]?b:a});
+
+  // KPIs
+  var kp=document.getElementById("d-kpis"),kdept;
+  function kpi(l,v){var d=document.createElement("div");d.className="d-kpi";d.innerHTML="<span></span><b></b>";d.firstChild.textContent=l;d.lastChild.textContent=v;kp.appendChild(d);return d.lastChild}
+  kpi("Total leave (all months)",fmt(total));kpi("Busiest month",hi[0]+" ("+hi[1]+")");kpi("Quietest month",lo[0]+" ("+lo[1]+")");kdept=kpi("Department share","All departments");
+
+  // Month bars
+  var svg=document.getElementById("d-months"),read=document.getElementById("d-read"),bars=[];
+  var W=620,H=230,L=34,B=24,T=10,max=720,bw=(W-L-8)/12;
+  [0,200,400,600].forEach(function(v){var y=T+(H-B-T)*(1-v/max);el("line",{x1:L,x2:W-6,y1:y,y2:y,stroke:"#e1e8f3"},svg);var t=el("text",{x:L-6,y:y+4,"text-anchor":"end"},svg);t.textContent=v});
+  MONTHS.forEach(function(m,i){
+    var h2=(H-B-T)*m[1]/max,x=L+i*bw+bw*.18,y=H-B-h2;
+    var r=el("rect",{x:x,y:y,width:bw*.64,height:h2,rx:4,class:"bar"+(m===hi?" max":""),tabindex:0,role:"img","aria-label":m[0]+": "+m[1]},svg);
+    function show(){bars.forEach(function(b){b.classList.remove("on")});r.classList.add("on");read.textContent=m[0]+": "+m[1]+" leave"+(m===hi?" (busiest month)":m===lo?" (quietest month)":"")}
+    r.addEventListener("mouseenter",show);r.addEventListener("focus",show);r.addEventListener("click",show);bars.push(r);
+    var t=el("text",{x:x+bw*.32,y:H-8,"text-anchor":"middle"},svg);t.textContent=m[0];
+  });
+
+  // Donut
+  var ds=document.getElementById("d-donut"),segs=[],off=0,lg=document.getElementById("d-legend"),ct=document.getElementById("d-center");
+  DEPT.forEach(function(d,i){
+    var c=el("circle",{cx:21,cy:21,r:15.915,stroke:d[2],"stroke-dasharray":d[1]+" "+(100-d[1]),"stroke-dashoffset":-off},ds);off+=d[1];segs.push(c);
+    var s=document.createElement("span");s.innerHTML='<i style="background:'+d[2]+'"></i>'+d[0];lg.appendChild(s);
+  });
+  // Filter chips
+  var fl=document.getElementById("d-filter"),btns=[];
+  function render(){
+    segs.forEach(function(c,i){c.style.opacity=(sel===null||sel===i)?1:.18});
+    btns.forEach(function(b,i){b.setAttribute("aria-pressed",(i-1)===(sel===null?-1:sel))});
+    ct.innerHTML="<b></b><span></span>";
+    if(sel===null){ct.firstChild.textContent="5";ct.lastChild.textContent="departments";kdept.textContent="All departments"}
+    else{ct.firstChild.textContent=DEPT[sel][1]+"%";ct.lastChild.textContent=DEPT[sel][0];kdept.textContent=DEPT[sel][0]+": "+DEPT[sel][1]+"%"}
+  }
+  ["All"].concat(DEPT.map(function(d){return d[0]})).forEach(function(n,i){
+    var b=document.createElement("button");b.type="button";b.textContent=n;b.onclick=function(){sel=i===0?null:i-1;render()};fl.appendChild(b);btns.push(b)
+  });
+  render();
+
+  // Horizontal bars
+  function hb(id,items){
+    var box=document.getElementById(id),mx=Math.max.apply(null,items.map(function(i){return i[1]}));
+    items.forEach(function(it){
+      var r=document.createElement("div");r.className="hb";
+      r.innerHTML='<span></span><div class="t"><i></i></div><em></em>';
+      r.children[0].textContent=it[0];r.children[1].firstChild.style.width=(it[1]/mx*100)+"%";r.children[2].textContent=it[1];box.appendChild(r);
+    });
+  }
+  hb("d-types",TYPES);hb("d-pos",POS);hb("d-emp",EMP);
+})();
+</script>
+</body>
+</html>
